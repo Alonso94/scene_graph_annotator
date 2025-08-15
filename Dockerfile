@@ -73,6 +73,11 @@ RUN python3 -m virtualenv --download -p /usr/bin/python3 /environments/clio && \
     bash -c "source /environments/clio/bin/activate && \
     pip install -e /catkin_ws/src/clio"
 
+# Install zed ros wrapper
+WORKDIR /catkin_ws/src
+RUN git clone --recursive https://github.com/stereolabs/zed-ros-wrapper.git 
+RUN source /opt/ros/noetic/setup.bash && catkin build zed_wrapper --cmake-args -DCMAKE_BUILD_TYPE=Release
+
 # source the environment and set up entrypoint
 RUN echo "source /catkin_ws/devel/setup.bash" >> /root/.bashrc && \
     echo "source /environments/clio_ros/bin/activate" >> /root/.bashrc

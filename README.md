@@ -31,3 +31,18 @@ If you get an error `Failed to initialize NVML: Unknown Error in Docker`, follow
 
 2. Restart docker daemon: `sudo systemctl restart docker`, then you can test by running `sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi`
 
+Create a docker image for Manibot scene graph:
+```bash
+docker build -t clio .
+```
+
+Create a container from the image:
+```bash
+docker_run_nvidia --name=clio clio
+```
+
+Connect with a running container:
+```bash
+docker exec -it clio bash
+```
+or attach Visual Studio Code to the container.
