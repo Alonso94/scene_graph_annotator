@@ -39,10 +39,19 @@ docker build -t clio .
 Create a container from the image:
 ```bash
 docker_run_nvidia --name=clio clio
+docker_run_usb --name=clio-realsense clio-realsense
 ```
 
 Connect with a running container:
 ```bash
+docker start clio
 docker exec -it clio bash
+docker start clio-realsense
+docker exec -it clio-realsense bash
 ```
 or attach Visual Studio Code to the container.
+
+Run 
+```
+roslaunch clio_ros realsense.launch
+```

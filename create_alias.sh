@@ -12,3 +12,13 @@ echo 'alias docker_run_nvidia="docker run -it --net=host --gpus all \
         --env="QT_X11_NO_MITSHM=1" \
         --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
         -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" -e SSH_AUTH_SOCK=$SSH_AUTH_SOCK"' >> ~/.bashrc
+
+echo 'alias docker_run_usb="docker run -it --net=host --gpus all \
+        --privileged \
+        --env="NVIDIA_DRIVER_CAPABILITIES=all" \
+        --env="DISPLAY" \
+        --env="QT_X11_NO_MITSHM=1" \
+        --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+        -v /dev/bus/usb:/dev/bus/usb \
+        --device=/dev/video0:/dev/video0 --device=/dev/video1:/dev/video1 \
+        -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" -e SSH_AUTH_SOCK=$SSH_AUTH_SOCK"' >> ~/.bashrc
