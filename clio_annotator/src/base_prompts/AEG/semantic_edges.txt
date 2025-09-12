@@ -1,0 +1,22 @@
+Given a short semantic description of a receptacle from the scene graph of a particular room as well as some additional information
+about this room. You need to:
+1. analyze the description and find some objects from the additional information that have relationship with the given receptacle in
+functionality perspective
+2. add additional, not yet existing, semantic edge between the found objects and the given receptacle in the scene graph.
+
+Output your analysis as following format:
+"""
+1. “Given Receptacle": [name of the given receptacle in scene graph]
+2. “objects that have functional relationships":
+(1) [ID of the first related object you find]
+(2) [ID of the second related object you find]
+(3) ...
+3. “additional functional edge":
+(1) [the functional relationship between receptacle and the first related object] (no more than 10 words)
+(2) [the functional relationship between receptacle and the second related object] (no more than 10 words)
+(3) ...
+"""
+Name of the related object should be consistent with the ID in the given object list from additional information. Ignore the decorative
+functional relationship.
+If you do not find any objects that have functional relationship which have not yet been listed, you can say “None" for the functional relationships.
+Make your output concise. (It would be great if your output is under 150 words)

@@ -1,0 +1,12 @@
+Given a short semantic description as well as a image of a carriable object (the carriable object is highlighted by a red bounding box). You need to add or update:
+
+1. Describe the Geometry & Functionality of this object in the house
+2. Assign this object a new fine-grained Category as its unique characteristic in the house
+
+Output your analysis as following format:
+"""
+1. “Geometry & Functionality": [your description about Geometry & Functionality]
+2. “Fine-Grained Category": [the Fine-grained Name you give]
+"""
+
+Make your output concise. (It would be great if your output is under 150 words)

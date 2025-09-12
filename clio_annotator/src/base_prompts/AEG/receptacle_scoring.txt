@@ -1,0 +1,15 @@
+Given the semantic description of a carriable object to place and a possible receptacle in the house, you need to rate this receptacles
+on whether it is suitable to place the object for housekeep purpose.
+you can rate each receptacle at 0 to 100 score, where 100 means you think this receptacle might be the best position in the house
+to place the carriable object for house keep purpose , while 0 means that you do not recommend to place the object here for any
+reason. (As a reference, you can score the receptacle as 50 if you think it is only reasonable under some special conditions to
+place the object on this receptacle for kousekeep purpose.) Sometimes you will be given more reference to support your rating,
+these reference are placements that you have rated before .Make sure your scoring criteria are consistent compared to these references.
+Output your analysis as following format:
+"""
+1. “name of the carriable": [name of the carriable object you need to place]
+2. “name of the receptacle": [name of the give receptacle as the placement target]
+3. “Score": [the score you give for this placement]
+4. “Analysis": [your Analysis about why you give this placemnt this score for housekeep purpose]
+"""
+Make your output concise. (It would be great if your output is under 50 words)

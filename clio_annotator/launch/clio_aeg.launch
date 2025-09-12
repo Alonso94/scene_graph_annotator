@@ -1,0 +1,22 @@
+<launch>
+  <!-- Include Clio's launch for graph building -->
+  <include file="$(find clio_ros)/launch/realsense.launch">
+    <arg name="run_segmentation" value="true"/>
+  </include>
+
+  <!-- AEG Annotation Node -->
+  <node pkg="clio_aeg_annotation" type="clio_aeg_annotator.py" name="clio_aeg_annotator" output="screen">
+    <remap from="~dsg_update" to="/dsg_update"/>  <!-- Input from Clio/Hydra -->
+    <remap from="~annotated_dsg_update" to="/annotated_dsg_update"/>  <!-- Output -->
+    <!-- Params -->
+    <param name="llm_model" value="gpt-4o-mini"/>
+    <param name="temperature" value="0.8"/>
+    <param name="openai_key" value="$(env OPENAI_API_KEY)"/>  <!-- Set env var -->
+    <param name="annotate_every" value="10"/>  <!-- Throttle -->
+  </node>
+
+  <!-- Optional: Launch Hydra Visualizer (from Hydra-ROS) -->
+  <include file="$(find hydra_ros)/launch/hydra_visualizer.launch">
+    <remap from="~dsg_update" to="/annotated_dsg_update"/>  <!-- Use annotated if extended -->
+  </include>
+</launch>
