@@ -44,8 +44,6 @@ docker_run_usb --name=clio-realsense clio-realsense
 
 Connect with a running container:
 ```bash
-docker start clio
-docker exec -it clio bash
 docker start clio-realsense
 docker exec -it clio-realsense bash
 ```
@@ -53,5 +51,9 @@ or attach Visual Studio Code to the container.
 
 Run 
 ```
-roslaunch clio_ros realsense.launch
+roslaunch realsense2_camera rs_camera.launch align_depth:=true enable_sync:=true publish_tf:=true pointcloud:=true
+roslaunch clio_ros realsense.launch \
+     object_tasks_file:=/catkin_ws/src/tasks.yaml \
+     place_tasks_file:=/catkin_ws/src/regions.yaml
+rosbag play /catkin_ws/src/office.bag --clock
 ```
