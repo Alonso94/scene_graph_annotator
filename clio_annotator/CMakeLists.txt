@@ -32,6 +32,7 @@ catkin_package(
 catkin_install_python(PROGRAMS
   src/clio_aeg_annotator.py
   src/clio_aeg_llm.py  # Your AEG agent implementation
+  src/general_LLM.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

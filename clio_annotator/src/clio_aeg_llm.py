@@ -1,7 +1,7 @@
 import os.path
 from typing import Union, List, Dict, Tuple
+import json
 
-import instructor.exceptions
 import pydantic_core
 import tqdm
 import numpy as np
@@ -11,7 +11,7 @@ from typing_extensions import Annotated
 import openai
 import pydantic_core
 
-from general_LLM import LLMAgent, load_prompt, add_image_to_prompt
+from general_LLM_fixed import LLMAgent, load_prompt, add_image_to_prompt
 
 def valid_score(s):
     if not 0 <= s <= 100:
@@ -58,45 +58,47 @@ class SemanticEdges(BaseModel):
 def get_nodes_by_attribute(graph: Dict, attribute: str, condition):
     matching = []
     for node_id, node in graph['nodes'].items():
-        if attribute is None:
-            if condition(node):
-                matching.append(node_id)
-        elif attribute in node and condition(node[attribute]):
+        if condition(node.get(attribute, None)):
             matching.append(node_id)
     return matching
 
-def get_related_nodes(graph: Dict, node_id: str, bidirectional=False, inverse=True, valid_relations=None, include_augmented_edges=False):
+def get_related_nodes(graph: Dict, node_id: str, inverse=False, bidirectional=False, valid_relations=None, include_augmented_edges=False):
     related = []
-    if not inverse:  # Forward: children
-        children = graph['nodes'][node_id].get('children', [])
-        for child_id in children:
-            rel = "inside" if graph['nodes'][child_id].get('type') in ["place", "object"] else "supported-by"
-            if valid_relations is None or rel in valid_relations:
-                related.append((child_id, rel))
-    if inverse or bidirectional:  # Inverse: parent
-        for n_id, n in graph['nodes'].items():
-            if node_id in n.get('children', []):
-                rel = "inside"
-                if valid_relations is None or rel in valid_relations:
-                    related.append((n_id, rel))
-    if include_augmented_edges and 'augmented_edges' in graph:
-        for (src, tgt), rel in graph['augmented_edges'].items():
-            if src == node_id and not inverse:
-                related.append((tgt, rel))
-            if tgt == node_id and inverse:
-                related.append((src, rel))
+    if not inverse:
+        edges = graph.get('edges', {})
+        augmented_edges = graph.get('augmented_edges', {}) if include_augmented_edges else {}
+        for edge_key in edges:
+            if isinstance(edge_key, tuple) and edge_key[0] == node_id:
+                if valid_relations is None or edges[edge_key] in valid_relations:
+                    related.append((edge_key[1], edges[edge_key]))
+        for edge_key in augmented_edges:
+            if isinstance(edge_key, tuple) and edge_key[0] == node_id:
+                if valid_relations is None or augmented_edges[edge_key] in valid_relations:
+                    related.append((edge_key[1], augmented_edges[edge_key]))
+    else:
+        edges = graph.get('edges', {})
+        augmented_edges = graph.get('augmented_edges', {}) if include_augmented_edges else {}
+        for edge_key in edges:
+            if isinstance(edge_key, tuple) and edge_key[1] == node_id:
+                if valid_relations is None or edges[edge_key] in valid_relations:
+                    related.append((edge_key[0], edges[edge_key]))
+        for edge_key in augmented_edges:
+            if isinstance(edge_key, tuple) and edge_key[1] == node_id:
+                if valid_relations is None or augmented_edges[edge_key] in valid_relations:
+                    related.append((edge_key[0], augmented_edges[edge_key]))
+    
+    if bidirectional:
+        related += get_related_nodes(graph, node_id, inverse=not inverse, valid_relations=valid_relations, include_augmented_edges=include_augmented_edges)
+    
     return related
 
-def get_related_nodes_multi_hop(graph: Dict, node_id: str, max_depth=-1, bidirectional=False, inverse=True, valid_relations=None):
-    def recurse(current_id, depth, inv, seen):
-        if depth == 0:
-            return set()
-        rel_nodes = set()
-        related = get_related_nodes(graph, current_id, inverse=inv)
-        for rel_id, _ in related:
+def get_related_nodes_multi_hop(graph: Dict, node_id: str, max_depth=-1, inverse=False, bidirectional=False, valid_relations=None, include_augmented_edges=False):
+    def recurse(node_id, depth, inv, seen):
+        rel_nodes = {}
+        for rel_id, relation in get_related_nodes(graph, node_id, inverse=inv, valid_relations=valid_relations, include_augmented_edges=include_augmented_edges):
             if rel_id not in seen:
+                rel_nodes[rel_id] = relation
                 seen.add(rel_id)
-                rel_nodes.add(rel_id)
                 if max_depth > 0:
                     rel_nodes.update(recurse(rel_id, depth - 1, inv, seen))
                 else:
@@ -146,12 +148,16 @@ def get_detailed_item_description(graph: Dict, item_id: str, add_floor_remark=Tr
     fields = ["geometry_and_position", "relationships", "unique_usage", "fine_grained_category", "geometry_and_functionality"]
     for field in fields:
         if field in node:
-            desc += f"\n{field.replace("_", " ")}: {node[field]}"
+            desc += f"\n{field.replace('_', ' ')}: {node[field]}"
     surrounding_objects = get_nearby_nodes(graph, item_id)
     surrounding_str = ", ".join([graph['nodes'][n_id].get('name', graph['nodes'][n_id].get('category', 'unknown')) for n_id, _ in surrounding_objects]) if surrounding_objects else "None"
     desc += f"\nSurrounding objects: {surrounding_str}"
     related_nodes = get_related_nodes(graph, item_id, inverse=True, bidirectional=True, include_augmented_edges=True)
-    related_str = "\n".join([f"\t - {graph['nodes'][n_id].get('fine_grained_category', graph['nodes'][n_id].get('category', 'unknown'))}: {relation}" for n_id, relation in related_nodes]) if related_nodes else "None"
+    related_items = []
+    for n_id, relation in related_nodes:
+        fine_cat = graph['nodes'][n_id].get('fine_grained_category', graph['nodes'][n_id].get('category', 'unknown'))
+        related_items.append(f"\t - {fine_cat}: {relation}")
+    related_str = "\n".join(related_items) if related_items else "None"
     desc += f"\nRelated objects: {related_str}"
     return desc
 
@@ -166,6 +172,69 @@ class ClioAEGLLMAgent(LLMAgent):
         self.score_history = {}
         self.graph = {'nodes': {}, 'edges': {}, 'augmented_edges': {}}
 
+    def _create_schema_for_model(self, model_class):
+        """Convert Pydantic model to JSON schema for function calling"""
+        if model_class == ReceptacleAffordanceAnalysis:
+            return {
+                "type": "object",
+                "properties": {
+                    "geometry_and_position": {"type": "string"},
+                    "relationships": {"type": "string"},
+                    "unique_usage": {"type": "string"},
+                    "fine_grained_category": {"type": "string"}
+                },
+                "required": ["geometry_and_position", "relationships", "unique_usage", "fine_grained_category"]
+            }
+        elif model_class == CarriableAffordanceAnalysis:
+            return {
+                "type": "object",
+                "properties": {
+                    "geometry_and_functionality": {"type": "string"},
+                    "fine_grained_category": {"type": "string"}
+                },
+                "required": ["geometry_and_functionality", "fine_grained_category"]
+            }
+        elif model_class == AreaAnalysis:
+            return {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["name", "description"]
+            }
+        elif model_class == SemanticEdges:
+            return {
+                "type": "object",
+                "properties": {
+                    "receptacle": {"type": "string"},
+                    "related_objects": {"type": "array", "items": {"type": "string"}},
+                    "semantic_relationships": {"type": "array", "items": {"type": "string"}}
+                },
+                "required": ["receptacle", "related_objects", "semantic_relationships"]
+            }
+        elif model_class == ScoreAnalysis:
+            return {
+                "type": "object",
+                "properties": {
+                    "score": {"type": "number", "minimum": 0, "maximum": 100},
+                    "analysis": {"type": "string"}
+                },
+                "required": ["score", "analysis"]
+            }
+        elif model_class == PlacementSuggestion:
+            return {
+                "type": "object",
+                "properties": {
+                    "best_place": {"type": "string"},
+                    "certainty": {"type": "integer"},
+                    "analysis": {"type": "string"}
+                },
+                "required": ["best_place", "certainty", "analysis"]
+            }
+        else:
+            raise ValueError(f"Unknown model class: {model_class}")
+
     def annotate_object(self, object):
         attributes = []
 
@@ -178,13 +247,15 @@ class ClioAEGLLMAgent(LLMAgent):
             local_context_prompt = load_prompt(f"local_context_{attribute.lower()}", self.prompt_path)
 
             surrounding_objects = get_nearby_nodes(self.graph, object)
-            surrounding_objects = [self.graph['nodes'][node_id].get("category", self.graph['nodes'][node_id].get("name", "unknown")) for node_id, distance in surrounding_objects]
+            surrounding_objects = [self.graph['nodes'][node_id].get('category', self.graph['nodes'][node_id].get('name', 'unknown')) for node_id, distance in surrounding_objects]
             surrounding_objects = ", ".join(surrounding_objects) if surrounding_objects else "None"
 
             related_nodes = get_related_nodes(self.graph, object, inverse=True, bidirectional=True, include_augmented_edges=True)
-            related_nodes = "\n".join([f"\t - {self.graph['nodes'][node_id].get('fine_grained_category',
-                                                                              self.graph['nodes'][node_id].get('category', 'unknown'))}: {relation}"
-                                       for node_id, relation in related_nodes]) if related_nodes else "None"
+            related_nodes_formatted = []
+            for node_id, relation in related_nodes:
+                fine_cat = self.graph['nodes'][node_id].get('fine_grained_category', self.graph['nodes'][node_id].get('category', 'unknown'))
+                related_nodes_formatted.append(f"\t - {fine_cat}: {relation}")
+            related_nodes = "\n".join(related_nodes_formatted) if related_nodes_formatted else "None"
 
             item_description = (
                 f"Category: {self.graph['nodes'][object].get('category', self.graph['nodes'][object].get('name', 'unknown'))}\n"
@@ -196,7 +267,7 @@ class ClioAEGLLMAgent(LLMAgent):
 
             for additional_context in ["geometry_and_position", "relationships", "unique_usage", "fine_grained_category", "geometry_and_functionality"]:
                 if additional_context in self.graph['nodes'][object]:
-                    item_description += f"\n{additional_context.replace("_", " ")}: {self.graph['nodes'][object][additional_context]}"
+                    item_description += f"\n{additional_context.replace('_', ' ')}: {self.graph['nodes'][object][additional_context]}"
 
             item_description = add_image_to_prompt(item_description, self.graph['nodes'][object].get("image", None))
 
@@ -209,17 +280,14 @@ class ClioAEGLLMAgent(LLMAgent):
             ]
 
             try:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages = messages,
-                    temperature=self.temperature,
-                    response_model = ReceptacleAffordanceAnalysis if attribute == "Receptacle" else CarriableAffordanceAnalysis,
-                )
+                response_model = ReceptacleAffordanceAnalysis if attribute == "Receptacle" else CarriableAffordanceAnalysis
+                schema = self._create_schema_for_model(response_model)
+                response_data = self._call_openai_with_schema(messages, schema)
+                
+                for key, value in response_data.items():
+                    self.graph['nodes'][object][key] = value
             except (pydantic_core._pydantic_core.ValidationError, openai.APIError):
                 continue
-
-            for key, value in response.dict().items():
-                self.graph['nodes'][object][key] = value
 
     def annotate_scene_graph(self, query_objects = None, **kwargs):
         unannotated_object = get_nodes_by_attribute(self.graph, None, lambda node_dict: "fine_grained_category" not in node_dict)
@@ -239,7 +307,7 @@ class ClioAEGLLMAgent(LLMAgent):
         # - label areas
         for area in tqdm.tqdm(areas, desc="Annotating areas") if areas else areas:
             area_objects = get_related_nodes_multi_hop(self.graph, area, inverse=True, bidirectional=False, valid_relations=["inside", "supported-by"])
-            area_objects = [self.graph['nodes'][obj_id].get("category", self.graph['nodes'][obj_id].get("name", "unknown")) for obj_id in area_objects]
+            area_objects = [self.graph['nodes'][obj_id].get('category', self.graph['nodes'][obj_id].get('name', 'unknown')) for obj_id in area_objects]
             area_objects = ("the area contains " + ", ".join(list(area_objects))) if area_objects else "None"
             area_image = None # TODO: get an image of the area
 
@@ -250,18 +318,13 @@ class ClioAEGLLMAgent(LLMAgent):
                 #{"role": "user", "content": area_image},
             ]
             try:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages = messages,
-                    temperature=self.temperature,
-                    response_model = AreaAnalysis,
-                )
-            except (pydantic_core._pydantic_core.ValidationError, openai.APIError, instructor.exceptions.InvalidResponse):
+                schema = self._create_schema_for_model(AreaAnalysis)
+                response_data = self._call_openai_with_schema(messages, schema)
+                
+                self.graph['nodes'][area]["fine_grained_category"] = response_data["name"]
+                self.graph['nodes'][area]["analysis"] = response_data["description"]
+            except (pydantic_core._pydantic_core.ValidationError, openai.APIError):
                 continue
-
-            self.graph['nodes'][area]["fine_grained_category"] = response.name
-            self.graph['nodes'][area]["analysis"] = response.description
-
 
         # - create room summaries for each room to be used in semantic edge creation
         room_descriptions = {}
@@ -274,18 +337,20 @@ class ClioAEGLLMAgent(LLMAgent):
             description = f"The room is a {self.graph['nodes'][room].get('category', self.graph['nodes'][room].get('name', 'unknown'))} and contains: \n\n"
             for child_area in child_areas:
                 area_objects = get_related_nodes_multi_hop(self.graph, child_area, inverse=True, bidirectional=False, valid_relations=["inside", "supported-by"])
-                area_objects = [f"{self.graph['nodes'][obj_id].get('fine_grained_category', 
-                                                                 self.graph['nodes'][obj_id].get('category', 'unknown'))} ({obj_id})"
-                                for obj_id in area_objects]
+                area_obj_list = []
+                for obj_id in area_objects:
+                    fine_cat = self.graph['nodes'][obj_id].get('fine_grained_category', self.graph['nodes'][obj_id].get('category', 'unknown'))
+                    area_obj_list.append(f"{fine_cat} ({obj_id})")
                 description += (f"{child_area} - {self.graph['nodes'][child_area].get('fine_grained_category', 'unknown')}: \n"
                                 f"{self.graph['nodes'][child_area].get('analysis', '')}\n"
-                                f"contains: {', '.join(area_objects) if area_objects else 'None'}\n\n")
+                                f"contains: {', '.join(area_obj_list) if area_obj_list else 'None'}\n\n")
 
             if child_objects:
-                child_objects = [f"{self.graph['nodes'][obj_id].get('fine_grained_category', 
-                                                                 self.graph['nodes'][obj_id].get('category', 'unknown'))} ({obj_id})"
-                                for obj_id in child_objects]
-                description += "other objects: " + ", ".join(child_objects) + "\n"
+                child_obj_list = []
+                for obj_id in child_objects:
+                    fine_cat = self.graph['nodes'][obj_id].get('fine_grained_category', self.graph['nodes'][obj_id].get('category', 'unknown'))
+                    child_obj_list.append(f"{fine_cat} ({obj_id})")
+                description += "other objects: " + ", ".join(child_obj_list) + "\n"
             room_descriptions[room] = description
 
         semantic_edges_prompt = load_prompt("semantic_edges", self.prompt_path)
@@ -311,17 +376,13 @@ class ClioAEGLLMAgent(LLMAgent):
             ]
 
             try:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages = messages,
-                    temperature=self.temperature,
-                    response_model = SemanticEdges,
-                )
+                schema = self._create_schema_for_model(SemanticEdges)
+                response_data = self._call_openai_with_schema(messages, schema)
 
-                if response.semantic_relationships is not None:
+                if response_data.get("semantic_relationships") is not None:
                     self.graph['augmented_edges'].update(
                         {(receptacle, related_object): semantic_relation
-                         for semantic_relation, related_object  in zip(response.semantic_relationships, response.related_objects)})
+                         for semantic_relation, related_object in zip(response_data["semantic_relationships"], response_data["related_objects"])})
             except (pydantic_core._pydantic_core.ValidationError, openai.APIError):
                 pass
 
@@ -329,8 +390,7 @@ class ClioAEGLLMAgent(LLMAgent):
         for receptacle in tqdm.tqdm(receptacles, desc="Updating receptacles") if receptacles else receptacles:
             self.annotate_object(receptacle)
 
-
-    def get_placement_score(self, scoring_prompt: str, target_description: str,  reference_item_description: str, target_image = None, reference_image = None) -> Tuple[int, str]:
+    def get_placement_score(self, scoring_prompt: str, target_description: str, reference_item_description: str, target_image = None, reference_image = None) -> Tuple[int, str]:
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": scoring_prompt},
@@ -342,14 +402,10 @@ class ClioAEGLLMAgent(LLMAgent):
                                                             "The item is pictured in the following image")}
         ]
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=self.temperature,
-            response_model=ScoreAnalysis,
-        )
+        schema = self._create_schema_for_model(ScoreAnalysis)
+        response_data = self._call_openai_with_schema(messages, schema)
 
-        return response.score, response.analysis
+        return response_data["score"], response_data["analysis"]
 
     def identify_misplaced_object(self, expanded_nodes, **kwargs):
 
@@ -371,7 +427,6 @@ class ClioAEGLLMAgent(LLMAgent):
             self.graph['nodes'][item]["placement_quality"] = score / 100
 
         return misplaced_items
-
 
     def generate_placements(self, rearrange_object, k = 5,
             target_subset = None, **kwargs):
@@ -423,15 +478,11 @@ class ClioAEGLLMAgent(LLMAgent):
         ]
 
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=self.temperature,
-                response_model=PlacementSuggestion,
-            )
+            schema = self._create_schema_for_model(PlacementSuggestion)
+            response_data = self._call_openai_with_schema(messages, schema)
+
+            placements_dict = {response_data["best_place"]: {"placement_quality": response_data["certainty"], "analysis": response_data["analysis"], "generic": False}}
+            if rearrange_object is not None:
+                self.graph['nodes'][rearrange_object]["placement_suggestions"] = placements_dict
         except (pydantic_core._pydantic_core.ValidationError, openai.APIError):
             return
-
-        placements_dict = {response.best_place: {"placement_quality": response.certainty, "analysis": response.analysis, "generic": False}}
-        if rearrange_object is not None:
-            self.graph['nodes'][rearrange_object]["placement_suggestions"] = placements_dict
