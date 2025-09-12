@@ -1,0 +1,4 @@
+llm_model: "gpt-4o-mini"
+temperature: 0.8
+annotate_every: 10
+query_objects: []  # List of node IDs; empty = all

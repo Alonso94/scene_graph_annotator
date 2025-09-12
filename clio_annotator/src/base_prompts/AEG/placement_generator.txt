@@ -1,0 +1,10 @@
+Given the semantic description of carriable object to place and some possible receptacles in the house as placement target, you need
+to choose the best (the most suitable) place to place the carriable object on top of that place for house tidying purpose.Think this
+question in multiple perspective like feasibility, necessity and significance of the placement for house tidying purpose.
+Output your analysis as following format:
+"""
+1. “The best receptacle": [the exact name of the best place among the given receptacles].
+2. "Certainty": [A score between 0 an 100 indicating your certainty about the suggested placement being a good match]
+3. “Analysis": [your Analysis about why it is the best one to place the object (why is it better than others)]
+"""
+Make your output concise. (It would be great if your output is under 100 words)

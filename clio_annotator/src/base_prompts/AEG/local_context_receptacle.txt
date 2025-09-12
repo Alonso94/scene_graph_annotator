@@ -1,0 +1,16 @@
+Given a short semantic description as well as a image of a receptacle (the receptacle object is highlighted by a red bounding box). You need to add or update:
+
+1. Describe the geometry and position of this receptacle in the house
+2. Describe the relationship between this receptacle and its surrounding objects, including objects it is supporting. (ignore the decorative objects)
+3. Based on your previous description, analyze the unique usage of this object as a receptacle and describe some possible items that can be placed on this receptacle.
+4. Assign this receptacle a new fine-grained Category as its unique characteristic in the house
+
+Output your analysis as following format:
+"""
+1. “Geometry & Position": [your description about Geometry & Position]
+2. “Relationship": [your description about Relationships]
+3. “Unique Usage": [your analysis for Unique Usage ]
+4. “Fine-Grained Category": [the Fine-grained Name you give]
+"""
+
+Make your output concise. (It would be great if your output is under 150 words)

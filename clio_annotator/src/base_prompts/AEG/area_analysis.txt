@@ -1,0 +1,8 @@
+You will receive a text description of a list of objects that locate in an area of a particular room, se well as an image of this area.
+You need to analyze and summary the unique functionality of this area among areas in the particular room.
+Output your analysis as following format:
+"""
+1. “Name": [assign a name of this given area in the room]
+2. “Description": [Describe the layout and functionality of this area in one sentence]
+"""
+Make your output concise. (It would be great if your output is under 50 words)
