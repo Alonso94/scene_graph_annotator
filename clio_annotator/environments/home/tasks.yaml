@@ -1,0 +1,224 @@
+find TV remote:
+- center:
+  - 3.2
+  - 1.8
+  - 0.42
+  extents:
+  - 0.15
+  - 0.04
+  - 0.02
+  rotation:
+    w: 0.9659
+    x: 0.0
+    y: 0.0
+    z: 0.2588
+
+bring me house keys:
+- center:
+  - 0.8
+  - 2.1
+  - 0.85
+  extents:
+  - 0.08
+  - 0.04
+  - 0.01
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+get my slippers:
+- center:
+  - 1.5
+  - 0.3
+  - 0.02
+  extents:
+  - 0.25
+  - 0.12
+  - 0.06
+  rotation:
+    w: 0.7071
+    x: 0.0
+    y: 0.0
+    z: 0.7071
+
+find reading glasses:
+- center:
+  - 2.8
+  - 1.2
+  - 0.74
+  extents:
+  - 0.13
+  - 0.04
+  - 0.02
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+locate phone charger:
+- center:
+  - 2.1
+  - 0.9
+  - 0.73
+  extents:
+  - 0.12
+  - 0.08
+  - 0.04
+  rotation:
+    w: 0.8660
+    x: 0.0
+    y: 0.0
+    z: 0.5
+
+get water bottle:
+- center:
+  - 6.2
+  - 4.1
+  - 0.91
+  extents:
+  - 0.07
+  - 0.07
+  - 0.25
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+bring me medications:
+- center:
+  - 7.8
+  - 2.3
+  - 1.65
+  extents:
+  - 0.08
+  - 0.05
+  - 0.12
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+find the flashlight:
+- center:
+  - 1.2
+  - 3.8
+  - 0.48
+  extents:
+  - 0.15
+  - 0.04
+  - 0.04
+  rotation:
+    w: 0.7071
+    x: 0.0
+    y: 0.0
+    z: 0.7071
+
+get throw blanket:
+- center:
+  - 3.6
+  - 2.2
+  - 0.45
+  extents:
+  - 0.6
+  - 0.8
+  - 0.08
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+locate my book:
+- center:
+  - 2.9
+  - 1.4
+  - 0.76
+  extents:
+  - 0.15
+  - 0.23
+  - 0.03
+  rotation:
+    w: 0.9239
+    x: 0.0
+    y: 0.0
+    z: 0.3827
+
+bring coffee mug to kitchen:
+- center:
+  - 5.8
+  - 3.2
+  - 0.92
+  extents:
+  - 0.08
+  - 0.08
+  - 0.1
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+find house slippers:
+- center:
+  - 0.9
+  - 0.5
+  - 0.02
+  extents:
+  - 0.28
+  - 0.14
+  - 0.08
+  rotation:
+    w: 0.8660
+    x: 0.0
+    y: 0.0
+    z: 0.5
+
+get my wallet:
+- center:
+  - 0.7
+  - 2.0
+  - 0.84
+  extents:
+  - 0.11
+  - 0.08
+  - 0.02
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+locate tissue box:
+- center:
+  - 2.7
+  - 1.5
+  - 0.75
+  extents:
+  - 0.23
+  - 0.12
+  - 0.11
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+bring me the newspaper:
+- center:
+  - 0.2
+  - 1.8
+  - 0.82
+  extents:
+  - 0.4
+  - 0.3
+  - 0.02
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0

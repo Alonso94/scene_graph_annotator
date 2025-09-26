@@ -1,0 +1,224 @@
+find milk carton:
+- center:
+  - 3.2
+  - 8.1
+  - 1.2
+  extents:
+  - 0.08
+  - 0.08
+  - 0.25
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+locate fresh apples:
+- center:
+  - 1.5
+  - 12.3
+  - 0.8
+  extents:
+  - 0.08
+  - 0.08
+  - 0.08
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+get bread from bakery section:
+- center:
+  - 6.8
+  - 15.2
+  - 0.9
+  extents:
+  - 0.3
+  - 0.15
+  - 0.1
+  rotation:
+    w: 0.7071
+    x: 0.0
+    y: 0.0
+    z: 0.7071
+
+find cereal box:
+- center:
+  - 4.1
+  - 6.7
+  - 1.5
+  extents:
+  - 0.2
+  - 0.08
+  - 0.28
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+locate ground beef:
+- center:
+  - 2.8
+  - 10.5
+  - 0.7
+  extents:
+  - 0.15
+  - 0.1
+  - 0.03
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+get frozen pizza:
+- center:
+  - 7.2
+  - 4.3
+  - 1.1
+  extents:
+  - 0.25
+  - 0.25
+  - 0.04
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+find orange juice:
+- center:
+  - 3.6
+  - 8.9
+  - 1.3
+  extents:
+  - 0.09
+  - 0.09
+  - 0.3
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+locate pasta sauce:
+- center:
+  - 5.1
+  - 7.2
+  - 1.4
+  extents:
+  - 0.07
+  - 0.07
+  - 0.15
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+get yogurt containers:
+- center:
+  - 3.4
+  - 8.6
+  - 0.9
+  extents:
+  - 0.1
+  - 0.1
+  - 0.12
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+find cleaning supplies:
+- center:
+  - 8.9
+  - 2.1
+  - 1.2
+  extents:
+  - 0.12
+  - 0.06
+  - 0.25
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+locate paper towels:
+- center:
+  - 9.2
+  - 1.8
+  - 1.6
+  extents:
+  - 0.15
+  - 0.15
+  - 0.3
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+get canned tomatoes:
+- center:
+  - 4.8
+  - 7.5
+  - 1.1
+  extents:
+  - 0.08
+  - 0.08
+  - 0.12
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+find fresh bananas:
+- center:
+  - 1.2
+  - 12.8
+  - 0.85
+  extents:
+  - 0.15
+  - 0.05
+  - 0.15
+  rotation:
+    w: 0.9659
+    x: 0.0
+    y: 0.0
+    z: 0.2588
+
+locate chicken breast:
+- center:
+  - 2.1
+  - 10.2
+  - 0.65
+  extents:
+  - 0.2
+  - 0.15
+  - 0.03
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+
+get ice cream:
+- center:
+  - 7.5
+  - 4.8
+  - 1.0
+  extents:
+  - 0.12
+  - 0.12
+  - 0.15
+  rotation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0

@@ -1,22 +1,93 @@
 <launch>
-  <!-- Include Clio's launch for graph building -->
-  <include file="$(find clio_ros)/launch/realsense.launch">
-    <arg name="run_segmentation" value="true"/>
+  <!-- ============================================================ -->
+  <!-- CLIO AEG ANNOTATION LAUNCH FILE                             -->
+  <!-- Uses clio_realsense.launch as base and adds AEG annotation  -->
+  <!-- ============================================================ -->
+
+  <!-- AEG ANNOTATION CONFIGURATION -->
+  <arg name="llm_model" default="gpt-4o-mini" doc="LLM model to use for annotation"/>
+  <arg name="temperature" default="0.8" doc="LLM temperature parameter"/>
+  <arg name="annotate_every" default="10" doc="Annotate every N scene graph updates"/>
+
+  <!-- PASS-THROUGH ARGUMENTS FOR CLIO_REALSENSE -->
+  <arg name="camera_name" default="camera"/>
+  <arg name="serial_no" default="" doc="Camera serial number (use _prefix for numbers)"/>
+  <arg name="usb_port_id" default="" doc="USB port ID (e.g. 4-1)"/>
+  <arg name="device_type" default="" doc="Device type filter (e.g. d435)"/>
+  <arg name="initial_reset" default="false" doc="Reset camera before start"/>
+  <arg name="enable_color" default="true"/>
+  <arg name="enable_depth" default="true"/>
+  <arg name="enable_infra1" default="false"/>
+  <arg name="enable_infra2" default="false"/>
+  <arg name="enable_pointcloud" default="true"/>
+  <arg name="enable_sync" default="true" doc="Synchronize frames"/>
+  <arg name="align_depth" default="true" doc="Align depth to color frames"/>
+  <arg name="publish_tf" default="true"/>
+  <arg name="robot_id" default="0" doc="unique robot identifier"/>
+  <arg name="robot_frame" default="$(arg camera_name)_link" doc="robot base frame"/>
+  <arg name="odom_frame" default="world" doc="robot map frame"/>
+  <arg name="map_frame" default="world" doc="backend scene graph frame"/>
+  <arg name="sensor_frame" default="$(arg camera_name)_link"/>
+  <arg name="dataset_name" default="realsense" doc="Dataset name"/>
+  <arg name="ablation_name" default="realsense_fine" doc="Ablation name"/>
+  <arg name="sensor_min_range" default="0.3" doc="minimum sensor range in meters"/>
+  <arg name="sensor_max_range" default="4.0" doc="maximum sensor range in meters"/>
+  <arg name="environment" default="office" doc="Environment type: office, supermarket, home, or custom" />
+  <arg name="object_tasks_file" default="" doc="File to read object tasks from (empty = use environment default)"/>
+  <arg name="place_tasks_file" default="" doc="File to read place tasks from (empty = use environment default)"/>
+  <arg name="start_visualizer" default="true" doc="Start visualizer node"/>
+  <arg name="start_rviz" default="true" doc="Start rviz"/>
+
+  <!-- ============================================================ -->
+  <!-- INCLUDE CLIO + REALSENSE BASE FUNCTIONALITY                 -->
+  <!-- ============================================================ -->
+
+  <include file="$(find clio_annotator)/launch/clio_realsense.launch">
+    <!-- Pass through all camera configuration -->
+    <arg name="camera_name" value="$(arg camera_name)"/>
+    <arg name="serial_no" value="$(arg serial_no)"/>
+    <arg name="usb_port_id" value="$(arg usb_port_id)"/>
+    <arg name="device_type" value="$(arg device_type)"/>
+    <arg name="initial_reset" value="$(arg initial_reset)"/>
+    <arg name="enable_color" value="$(arg enable_color)"/>
+    <arg name="enable_depth" value="$(arg enable_depth)"/>
+    <arg name="enable_infra1" value="$(arg enable_infra1)"/>
+    <arg name="enable_infra2" value="$(arg enable_infra2)"/>
+    <arg name="enable_pointcloud" value="$(arg enable_pointcloud)"/>
+    <arg name="enable_sync" value="$(arg enable_sync)"/>
+    <arg name="align_depth" value="$(arg align_depth)"/>
+    <arg name="publish_tf" value="$(arg publish_tf)"/>
+    
+    <!-- Pass through CLIO configuration -->
+    <arg name="robot_id" value="$(arg robot_id)"/>
+    <arg name="robot_frame" value="$(arg robot_frame)"/>
+    <arg name="odom_frame" value="$(arg odom_frame)"/>
+    <arg name="map_frame" value="$(arg map_frame)"/>
+    <arg name="sensor_frame" value="$(arg sensor_frame)"/>
+    <arg name="dataset_name" value="$(arg dataset_name)"/>
+    <arg name="ablation_name" value="$(arg ablation_name)"/>
+    <arg name="sensor_min_range" value="$(arg sensor_min_range)"/>
+    <arg name="sensor_max_range" value="$(arg sensor_max_range)"/>
+    <arg name="environment" value="$(arg environment)"/>
+    <arg name="object_tasks_file" value="$(arg object_tasks_file)"/>
+    <arg name="place_tasks_file" value="$(arg place_tasks_file)"/>
+    <arg name="start_visualizer" value="$(arg start_visualizer)"/>
+    <arg name="start_rviz" value="$(arg start_rviz)"/>
   </include>
 
-  <!-- AEG Annotation Node -->
+  <!-- ============================================================ -->
+  <!-- AEG ANNOTATION NODE                                          -->
+  <!-- ============================================================ -->
+
   <node pkg="clio_aeg_annotation" type="clio_aeg_annotator.py" name="clio_aeg_annotator" output="screen">
-    <remap from="~dsg_update" to="/dsg_update"/>  <!-- Input from Clio/Hydra -->
+    <remap from="~dsg_update" to="/clio_node/backend/dsg"/>  <!-- Input from Clio/Hydra -->
     <remap from="~annotated_dsg_update" to="/annotated_dsg_update"/>  <!-- Output -->
-    <!-- Params -->
-    <param name="llm_model" value="gpt-4o-mini"/>
-    <param name="temperature" value="0.8"/>
+    
+    <!-- AEG Parameters -->
+    <param name="llm_model" value="$(arg llm_model)"/>
+    <param name="temperature" value="$(arg temperature)"/>
     <param name="openai_key" value="$(env OPENAI_API_KEY)"/>  <!-- Set env var -->
-    <param name="annotate_every" value="10"/>  <!-- Throttle -->
+    <param name="annotate_every" value="$(arg annotate_every)"/>  <!-- Throttle -->
   </node>
 
-  <!-- Optional: Launch Hydra Visualizer (from Hydra-ROS) -->
-  <include file="$(find hydra_ros)/launch/hydra_visualizer.launch">
-    <remap from="~dsg_update" to="/annotated_dsg_update"/>  <!-- Use annotated if extended -->
-  </include>
 </launch>

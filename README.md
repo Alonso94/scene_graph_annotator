@@ -50,7 +50,7 @@ docker exec -it clio-realsense bash
 or attach Visual Studio Code to the container.
 
 Run 
-```
+```bash
 roslaunch realsense2_camera rs_camera.launch align_depth:=true enable_sync:=true publish_tf:=true pointcloud:=true
 roslaunch clio_ros realsense.launch \
      object_tasks_file:=/catkin_ws/src/tasks.yaml \
