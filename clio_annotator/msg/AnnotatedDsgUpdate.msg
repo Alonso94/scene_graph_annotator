@@ -9,6 +9,4 @@ bool full_update       # whether or not the message contains the entire scene gr
 int64 sequence_number  # update index
 
 # Annotations added by AEG-LLM
-Annotation annotations[]  # Per-node/edge annotations (link by ID)
-
-MSG: clio_aeg_annotation/Annotation  # Defined below
+Annotation[] annotations  # Per-node/edge annotations (link by ID)

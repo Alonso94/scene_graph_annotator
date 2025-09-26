@@ -13,8 +13,8 @@ catkin_python_setup()
 
 add_message_files(
   FILES
-  AnnotatedDsgUpdate.msg
   Annotation.msg  # Custom msg for AEG fields (e.g., fine_grained_category)
+  AnnotatedDsgUpdate.msg
 )
 
 generate_messages(
