@@ -11,7 +11,10 @@ from typing_extensions import Annotated
 import openai
 import pydantic_core
 
-from general_LLM_fixed import LLMAgent, load_prompt, add_image_to_prompt
+try:
+    from .general_LLM import LLMAgent, load_prompt, add_image_to_prompt
+except ImportError:
+    from general_LLM import LLMAgent, load_prompt, add_image_to_prompt
 
 def valid_score(s):
     if not 0 <= s <= 100:

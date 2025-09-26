@@ -79,7 +79,7 @@
   <!-- AEG ANNOTATION NODE                                          -->
   <!-- ============================================================ -->
 
-  <node pkg="clio_aeg_annotation" type="clio_aeg_annotator.py" name="clio_aeg_annotator" output="screen">
+  <node pkg="clio_aeg_annotation" type="clio_arg_annotator.py" name="clio_aeg_annotator" output="screen">
     <remap from="~dsg_update" to="/clio_node/backend/dsg"/>  <!-- Input from Clio/Hydra -->
     <remap from="~annotated_dsg_update" to="/annotated_dsg_update"/>  <!-- Output -->
     

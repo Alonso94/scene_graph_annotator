@@ -3,7 +3,19 @@ import rospy
 from hydra_msgs.msg import DsgUpdate
 from clio_aeg_annotation.msg import AnnotatedDsgUpdate, Annotation
 import json
-from clio_aeg_llm import ClioAEGLLMAgent
+import numpy as np
+import base64
+try:
+    import open3d as o3d
+except ImportError:
+    rospy.logwarn("open3d not available, point cloud processing disabled")
+    o3d = None
+
+# Import from same package - handle both direct execution and package import
+try:
+    from .clio_aeg_llm import ClioAEGLLMAgent
+except ImportError:
+    from clio_aeg_llm import ClioAEGLLMAgent
 
 class ClioAEGAnnotator:
     def __init__(self):
@@ -51,6 +63,7 @@ class ClioAEGAnnotator:
         # Delete edges (assume edges from children; simplify)
         for del_edge in msg.deleted_edges:
             # If edges stored, remove; skip for now
+            pass
 
         self.update_count += 1
         if msg.full_update or self.update_count % self.annotate_every == 0:
