@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from hydra_msgs.msg import DsgUpdate
-from clio_aeg_annotation.msg import AnnotatedDsgUpdate, Annotation
+from clio_annotator.msg import AnnotatedDsgUpdate, Annotation
 import json
 import numpy as np
 import base64
@@ -21,9 +21,14 @@ class ClioAEGAnnotator:
     def __init__(self):
         rospy.init_node('clio_aeg_annotator')
         self.graph = {'nodes': {}, 'edges': {}, 'augmented_edges': {}}  # Dict-based graph
-        self.agent = ClioAEGLLMAgent(self.graph)
-        self.pub = rospy.Publisher('/annotated_dsg_update', AnnotatedDsgUpdate, queue_size=10)
-        self.sub = rospy.Subscriber('/dsg_update', DsgUpdate, self.dsg_callback)
+        
+        # Get ROS parameters for LLM configuration
+        llm_model = rospy.get_param('~llm_model', 'gpt-4o-mini')
+        temperature = rospy.get_param('~temperature', 0.8)
+        
+        self.agent = ClioAEGLLMAgent(model=llm_model, temperature=temperature)
+        self.pub = rospy.Publisher('~annotated_dsg_update', AnnotatedDsgUpdate, queue_size=10)
+        self.sub = rospy.Subscriber('~dsg_update', DsgUpdate, self.dsg_callback)
         self.update_count = 0
         self.annotate_every = rospy.get_param('~annotate_every', 10)
         rospy.loginfo("Clio AEG Annotator started.")
@@ -41,24 +46,31 @@ class ClioAEGAnnotator:
             for node_dict in layer.get('nodes', []):
                 node_id = str(node_dict['id'])  # Use str for IDs
                 self.graph['nodes'][node_id] = node_dict
+                self.agent.graph['nodes'][node_id] = node_dict  # Update agent's graph too
                 # Infer pickupable/receptacle if not present
                 if 'type' in node_dict:
                     self.graph['nodes'][node_id]['pickupable'] = node_dict['type'] == 'object' and 'bounds' in node_dict and np.linalg.norm(node_dict['bounds'][1] - node_dict['bounds'][0]) < 0.5
                     self.graph['nodes'][node_id]['receptacle'] = node_dict['type'] in ['structure'] or node_dict.get('children', [])
+                    self.agent.graph['nodes'][node_id]['pickupable'] = self.graph['nodes'][node_id]['pickupable']
+                    self.agent.graph['nodes'][node_id]['receptacle'] = self.graph['nodes'][node_id]['receptacle']
                 # Add extra dict if not present
                 self.graph['nodes'][node_id]['extra'] = self.graph['nodes'][node_id].get('extra', {})
+                self.agent.graph['nodes'][node_id]['extra'] = self.graph['nodes'][node_id]['extra']
                 # Transform to np if serialized
                 if 'transform' in node_dict and isinstance(node_dict['transform'], list):
                     self.graph['nodes'][node_id]['transform'] = np.array(node_dict['transform']).reshape(4,4)
+                    self.agent.graph['nodes'][node_id]['transform'] = self.graph['nodes'][node_id]['transform']
                 # Point cloud if base64
-                if 'point_cloud' in node_dict and node_dict['point_cloud']:
+                if 'point_cloud' in node_dict and node_dict['point_cloud'] and o3d is not None:
                     pc_bytes = base64.b64decode(node_dict['point_cloud'])
                     pc = o3d.io.read_point_cloud_from_buffer(pc_bytes)  # Assume pcd format; adjust
                     self.graph['nodes'][node_id]['point_cloud'] = pc
+                    self.agent.graph['nodes'][node_id]['point_cloud'] = pc
 
         # Delete nodes
         for del_id in msg.deleted_nodes:
             self.graph['nodes'].pop(str(del_id), None)
+            self.agent.graph['nodes'].pop(str(del_id), None)
 
         # Delete edges (assume edges from children; simplify)
         for del_edge in msg.deleted_edges:

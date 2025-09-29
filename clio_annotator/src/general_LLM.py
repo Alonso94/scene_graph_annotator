@@ -103,10 +103,12 @@ class LLMAgent:
                  use_cache: bool = True,
                  ):
 
-        self.client = OpenAI(
-            organization=os.environ["OPENAI_ORG"],
-            #project=os.environ["OPENAI_PROJECT"],
-        )
+        # Initialize OpenAI client with optional organization
+        client_kwargs = {}
+        if "OPENAI_ORG" in os.environ:
+            client_kwargs["organization"] = os.environ["OPENAI_ORG"]
+        
+        self.client = OpenAI(**client_kwargs)
         
         self.cache = SimpleCache() if use_cache else None
         self.model = model

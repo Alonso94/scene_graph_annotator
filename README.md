@@ -82,3 +82,15 @@ In case you had a problem with realsense camera:
 ```bash
 apt update && apt install -y ros-noetic-realsense2-camera ros-noetic-realsense2-description
 ```
+
+## AEG Annotator
+
+To run with LLM-based scene graph annotation:
+
+```bash
+# Set OpenAI API key
+export OPENAI_API_KEY="your-openai-api-key"
+
+# Launch with AEG annotation
+roslaunch clio_annotator clio_aeg.launch
+```
