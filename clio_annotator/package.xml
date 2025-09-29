@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>clio_aeg_annotation</name>
+  <name>clio_annotator</name>
   <version>0.1.0</version>
   <description>ROS node for annotating Clio scene graphs with AEG-LLM affordances and semantics.</description>
   <maintainer email="your.email@example.com">Your Name</maintainer>

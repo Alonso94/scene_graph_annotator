@@ -49,11 +49,21 @@ docker exec -it clio-realsense bash
 ```
 or attach Visual Studio Code to the container.
 
+Clone this package into `/catkin_ws/src` in the container and build the workspace:
+```bash
+cd /catkin_ws/src
+git clone https://github.com/Alonso94/Manibot_scene_graph.git
+cd /catkin_ws
+catkin build
+source devel/setup.bash
+```
+Make sure that the semantic inference models are downloaded:
+```bash
+cd /catkin_ws/src/Manibot_scene_graph/clio_annotator/scripts/semantic_inference
+bash download_models.sh
+```
+
 Run 
 ```bash
-roslaunch realsense2_camera rs_camera.launch align_depth:=true enable_sync:=true publish_tf:=true pointcloud:=true
-roslaunch clio_ros realsense.launch \
-     object_tasks_file:=/catkin_ws/src/tasks.yaml \
-     place_tasks_file:=/catkin_ws/src/regions.yaml
-rosbag play /catkin_ws/src/office.bag --clock
+roslaunch clio_annotator clio_realsense.launch
 ```

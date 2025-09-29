@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(clio_aeg_annotation)
+project(clio_annotator)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
