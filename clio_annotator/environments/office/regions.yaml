@@ -1,19 +1,5 @@
-# Office Environment Region Task File
-# Region tasks describe spatial and semantic areas for place-based reasoning
-# These help CLIO understand different functional areas within the environment
-
 ---
-- an image of a workspace area
+- an image of a computing workspace
+- an image of a hallway or corridor
+- an image of a kitchenette
 - an image of a conference room
-- an image of a reception desk
-- an image of a filing area
-- an image of a meeting room
-- an image of a break room
-- an image of a storage closet
-- an image of a cubicle area
-- an image of an office hallway
-- an image of a copy center
-- an image of a waiting area
-- an image of a phone booth
-- an image of a supply room
-- an image of an executive office
